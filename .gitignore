@@ -5,4 +5,7 @@ env/
 __pycache__/
 
 # Datasets
-*.csv
+data/*.csv
+
+# Model artifacts
+*.pkl

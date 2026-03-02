@@ -6,7 +6,7 @@ from sklearn.ensemble import RandomForestRegressor
 
 def train():
     print("Loading data...")
-    df = pd.read_csv('EVChargingStationUsage.csv')
+    df = pd.read_csv('data/EVChargingStationUsage.csv')
 
     print("Cleaning data...")
     df['Start Date'] = pd.to_datetime(df['Start Date'])
@@ -63,4 +63,8 @@ def train():
     print("Done! Artifacts saved to model_artifacts.pkl")
 
 if __name__ == "__main__":
+    import os
+    os.chdir(os.path.join(os.path.dirname(__file__), '..'))
     train()
+
+
