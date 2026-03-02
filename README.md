@@ -68,9 +68,82 @@ streamlit run app.py
 
 Open the URL shown in the terminal (default: http://localhost:8501).
 
-## How It Works
+## System Architecture
 
-1. **Data Preprocessing** — Parses timestamps, removes zero-energy sessions, groups by station/hour/weekday.
-2. **Feature Engineering** — Creates peak hour indicator, weekend flag, station average load, and interaction features.
-3. **Model Training** — Trains a Random Forest Regressor on the engineered features.
-4. **Prediction App** — Users select a station, hour, and day to get an energy consumption prediction with context against the station's historical average.
+```
+📂 User provides EVChargingStationUsage.csv
+  |
+  ▼
+┌─────────────────────┐
+│   DataLoader         │  ← Pandas
+│  (Read the CSV)      │
+└─────────────────────┘
+        │ raw dataframe
+        ▼
+┌─────────────────────┐
+│  DataPreprocessor    │  ← Pandas / NumPy
+│  Parse timestamps    │
+│  → Remove zero-energy│
+│  → Filter columns    │
+└─────────────────────┘
+        │ clean dataframe
+        ▼
+┌─────────────────────┐
+│  FeatureEngineer     │  ← Pandas / scikit-learn
+│  Group by Station/   │
+│  Hour/Weekday        │
+│  → Peak_Hour flag    │
+│  → Is_Weekend flag   │
+│  → Station_Avg_Load  │
+│  → Interaction feat  │
+│  → One-Hot Encoding  │
+└─────────────────────┘
+        │ feature matrix
+        ▼
+┌─────────────────────┐
+│  ModelTrainer        │  ← scikit-learn
+│  Random Forest       │
+│  Regressor           │
+│  (n_estimators=100)  │
+└─────────────────────┘
+        │ trained model
+        ▼
+┌─────────────────────┐
+│  ArtifactSerializer  │  ← joblib
+│  Save model +        │
+│  feature_columns +   │
+│  station_avg_map     │
+└─────────────────────┘
+        │ model_artifacts.pkl
+        ▼
+┌─────────────────────┐
+│  Streamlit Web App   │  ← Streamlit
+│  Load artifacts      │
+│  → User selects:     │
+│    Station / Hour /  │
+│    Day of week       │
+│  → Reconstruct       │
+│    feature vector    │
+└─────────────────────┘
+        │ input features
+        ▼
+┌─────────────────────┐
+│  Predictor           │  ← scikit-learn (RF)
+│  model.predict()     │
+│  → Energy (kWh)      │
+└─────────────────────┘
+        │ prediction
+        ▼
+┌─────────────────────┐
+│  ResultDisplay       │  ← Streamlit
+│  Show predicted kWh  │
+│  → Compare with      │
+│    station average   │
+│  → High/Low demand   │
+│    indicator         │
+└─────────────────────┘
+
+📓 Jupyter Notebook (EDA & Experimentation)
+   Insights inform feature design
+   ← Matplotlib / Seaborn
+```
