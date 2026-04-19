@@ -55,9 +55,8 @@ async def predict_energy(req: PredictRequest):
         input_data['Station_Avg_Load'] = station_avg_map.get(req.station_name, 0)
         input_data['Hour_Weekend_Interaction'] = input_data['Hour'] * input_data['Is_Weekend']
 
-        # Create model input DataFrame matching feature columns
-        model_input = pd.DataFrame(columns=feature_columns, dtype='float64')
-        model_input.loc[0] = 0.0
+        # Create model input DataFrame matching feature columns, pre-filled with floats
+        model_input = pd.DataFrame(0.0, index=[0], columns=feature_columns)
         for col in ['Hour', 'Weekday', 'Peak_Hour', 'Is_Weekend', 'Station_Avg_Load', 'Hour_Weekend_Interaction']:
             if col in feature_columns:
                 model_input.at[0, col] = input_data[col]

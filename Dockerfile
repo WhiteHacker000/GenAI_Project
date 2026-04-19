@@ -15,7 +15,9 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt .
 
 # Install any needed packages specified in requirements.txt
+RUN pip install --no-cache-dir --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir uvicorn fastapi  # Just to be 100% sure they are in the PATH
 
 # Copy the rest of the application code into the container
 COPY . .

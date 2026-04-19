@@ -8,8 +8,8 @@ st.set_page_config(
     layout="wide"
 )
 
-# Backend URL - this should point to your FastAPI server
-BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
+# Backend URL - internally within the Docker container, use 127.0.0.1
+BACKEND_URL = os.getenv("BACKEND_URL", "http://127.0.0.1:8000")
 
 @st.cache_data
 def get_stations():
