@@ -2,7 +2,7 @@
 
 # Start the FastAPI backend in the background on port 8000
 echo "Starting FastAPI backend..."
-uvicorn api:app --host 0.0.0.0 --port 8000 &
+python3 -m uvicorn api:app --host 0.0.0.0 --port 8000 &
 
 # Wait a few seconds for the backend to initialize
 sleep 5
