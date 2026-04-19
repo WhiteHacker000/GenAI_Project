@@ -23,6 +23,10 @@ else:
 # API Key for LangGraph (loaded from .env)
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
+@app.get("/")
+async def health_check():
+    return {"status": "healthy", "service": "EV Charging AI Backend"}
+
 class PredictRequest(BaseModel):
     station_name: str
     hour: int

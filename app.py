@@ -8,19 +8,20 @@ st.set_page_config(
     layout="wide"
 )
 
-# Backend URL - internally within the Docker container, use 127.0.0.1
-BACKEND_URL = os.getenv("BACKEND_URL", "http://127.0.0.1:8000")
+# Backend URL - internally within the Docker container, handle 0.0.0.0
+BACKEND_URL = os.getenv("BACKEND_URL", "http://0.0.0.0:8000")
 
-@st.cache_data
+@st.cache_data(ttl=60)
 def get_stations():
-    try:
-        response = requests.get(f"{BACKEND_URL}/stations")
-        if response.status_code == 200:
-            return response.json()
-        return []
-    except Exception as e:
-        st.error(f"Could not connect to Backend: {e}")
-        return []
+    import time
+    for _ in range(3): # Simple retry logic
+        try:
+            response = requests.get(f"{BACKEND_URL}/stations", timeout=5)
+            if response.status_code == 200:
+                return response.json()
+        except Exception:
+            time.sleep(2)
+    return []
 
 def main():
     st.title("⚡ EV Charging Station Energy Prediction")
