@@ -9,7 +9,7 @@ st.set_page_config(
 )
 
 # Backend URL - internally within the Docker container, handle 0.0.0.0
-BACKEND_URL = os.getenv("BACKEND_URL", "http://0.0.0.0:8000")
+BACKEND_URL = os.getenv("BACKEND_URL", "http://127.0.0.1:8000")
 
 @st.cache_data(ttl=60)
 def get_stations():
