@@ -35,7 +35,7 @@ hf-xet==1.4.3
 httpcore==1.0.9
 httpx==0.28.1
 httpx-sse==0.4.3
-huggingface_hub==1.11.0
+huggingface_hub==0.24.0
 idna==3.11
 ipykernel==7.2.0
 ipython==9.10.0
@@ -55,7 +55,7 @@ langchain-classic==1.0.4
 langchain-community==0.4.1
 langchain-core==1.2.31
 langchain-groq==1.1.2
-langchain-huggingface==1.2.2
+# Removed langchain-huggingface to resolve FastEmbed conflict
 langchain-text-splitters==1.1.2
 langgraph==1.1.6
 langgraph-checkpoint==4.0.2
