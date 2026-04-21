@@ -2,7 +2,7 @@ import json
 from typing import TypedDict
 from langgraph.graph import StateGraph, END
 from langchain_community.vectorstores import FAISS
-from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_community.embeddings.fastembed import FastEmbedEmbeddings
 from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field
@@ -28,7 +28,8 @@ def analyze_node(state: AgentState):
 # Node 2: Retrieve Guidelines
 def retrieve_node(state: AgentState):
     try:
-        embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+        # Lightweight FastEmbed embeddings
+        embeddings = FastEmbedEmbeddings()
         vectorstore = FAISS.load_local("faiss_index", embeddings, allow_dangerous_deserialization=True)
         retriever = vectorstore.as_retriever(search_kwargs={"k": 2})
         

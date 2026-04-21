@@ -1,7 +1,7 @@
 import os
 from langchain_community.document_loaders import TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_community.embeddings.fastembed import FastEmbedEmbeddings
 from langchain_community.vectorstores import FAISS
 
 def build_vector_store():
@@ -13,8 +13,8 @@ def build_vector_store():
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
     splits = text_splitter.split_documents(docs)
 
-    # Free open-source embeddings using HuggingFace
-    embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+    # Lightweight FastEmbed embeddings (No Torch/Transformers needed)
+    embeddings = FastEmbedEmbeddings()
 
     # Create FAISS instance and build the vector store
     vectorstore = FAISS.from_documents(documents=splits, embedding=embeddings)
