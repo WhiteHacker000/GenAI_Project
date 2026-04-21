@@ -2,11 +2,26 @@
 .venv/
 venv/
 env/
+
+# Python cache
 __pycache__/
+*.pyc
+*.pyo
+*.pyd
 
-# Datasets
-data/*.csv
-
-# Model artifacts
-*.pkl
+# Secrets
 .env
+
+# IDE
+.idea/
+.vscode/
+
+# Model artifacts & large data files
+*.pkl
+*.csv
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+
+# OS files
+.DS_Store

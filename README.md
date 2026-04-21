@@ -1,6 +1,10 @@
 # ⚡ EV Charging Station Energy Prediction
 
-A machine learning project that predicts energy consumption (kWh) at EV charging stations based on time of day, day of week, and station characteristics. Includes a Streamlit web app for interactive predictions.
+[![Live Demo](https://img.shields.io/badge/🚀%20Live%20Demo-Streamlit-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://genaiproject-yhnnwtxdp3dkjy4ifvdvpj.streamlit.app/)
+
+> **🌐 Hosted App:** [https://genaiproject-yhnnwtxdp3dkjy4ifvdvpj.streamlit.app/](https://genaiproject-yhnnwtxdp3dkjy4ifvdvpj.streamlit.app/)
+
+A machine learning project that predicts energy consumption (kWh) at EV charging stations based on time of day, day of week, and station characteristics. Includes a Streamlit web app for interactive predictions and an agentic LangGraph workflow for infrastructure planning.
 
 ## Tech Stack
 
@@ -13,15 +17,17 @@ A machine learning project that predicts energy consumption (kWh) at EV charging
 ## Project Structure
 
 ```
-├── app.py                  # Streamlit web app for predictions
-├── scripts/
-│   ├── train_model.py      # Model training pipeline
-│   └── extracted_code.py   # EDA and experimentation code from notebook
-├── notebooks/
-│   └── GenAI_Ptoject.ipynb # Jupyter notebook with exploration & analysis
-├── data/
-│   └── (place EVChargingStationUsage.csv here)
-├── requirements.txt        # Python dependencies
+├── app.py                          # Streamlit frontend
+├── api.py                          # FastAPI backend
+├── agent.py                        # LangGraph agentic workflow
+├── rag_builder.py                  # Script to build FAISS vector store
+├── infrastructure_guidelines.md    # RAG knowledge base
+├── faiss_index/                    # Saved FAISS vector store
+├── model_artifacts.pkl             # Trained Random Forest model
+├── Dockerfile                      # Container config
+├── start.sh                        # Startup script (Docker/Render)
+├── runtime.txt                     # Python version for Streamlit Cloud
+├── requirements.txt                # Python dependencies
 └── README.md
 ```
 
@@ -48,25 +54,23 @@ source .venv/bin/activate   # macOS/Linux
 pip install -r requirements.txt
 ```
 
-### 4. Add the dataset
-
-Place the `EVChargingStationUsage.csv` file in the `data/` directory.
-
-### 5. Train the model
+### 4. Start the FastAPI backend
 
 ```bash
-python scripts/train_model.py
+python api.py
 ```
 
-This generates `model_artifacts.pkl` in the project root.
+This starts the backend at `http://127.0.0.1:8000`.
 
-### 6. Run the web app
+### 5. Run the Streamlit app
 
 ```bash
 streamlit run app.py
 ```
 
-Open the URL shown in the terminal (default: http://localhost:8501).
+Open in browser: **http://localhost:8501**
+
+> 🌐 Or use the hosted version: [https://genaiproject-yhnnwtxdp3dkjy4ifvdvpj.streamlit.app/](https://genaiproject-yhnnwtxdp3dkjy4ifvdvpj.streamlit.app/)
 
 ## System Architecture
 
