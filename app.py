@@ -8,26 +8,56 @@ st.set_page_config(
     layout="wide"
 )
 
-# Backend URL - internally within the Docker container, handle 0.0.0.0
-BACKEND_URL = os.getenv("BACKEND_URL", "http://127.0.0.1:8000")
+BACKEND_URL = os.getenv(
+    "BACKEND_URL",
+    "http://127.0.0.1:8000"
+).rstrip("/")
+
+REQUEST_TIMEOUT = 15
+
+
+def backend_error(response):
+    try:
+        detail = response.json().get("detail", response.text)
+    except ValueError:
+        detail = response.text
+    return f"Backend returned HTTP {response.status_code}: {detail}"
 
 @st.cache_data(ttl=60)
 def get_stations():
-    import time
-    for _ in range(3): # Simple retry logic
+    for attempt in range(3):
         try:
-            response = requests.get(f"{BACKEND_URL}/stations", timeout=5)
-            if response.status_code == 200:
-                return response.json()
-        except Exception:
-            time.sleep(2)
+            response = requests.get(
+                f"{BACKEND_URL}/stations", timeout=REQUEST_TIMEOUT
+            )
+            response.raise_for_status()
+            return response.json()
+        except requests.RequestException:
+            if attempt == 2:
+                raise
     return []
 
 def main():
     st.title("⚡ EV Charging Station Energy Prediction")
     st.markdown("Predict the total energy (kWh) consumed at a specific charging station based on the time of day and day of the week.")
     
-    stations = get_stations()
+    try:
+        stations = get_stations()
+    except requests.Timeout:
+        st.error("The backend did not respond in time. Please try again later.")
+        return
+    except requests.ConnectionError:
+        st.error(
+            "The backend is unavailable. Check BACKEND_URL and make sure the "
+            "FastAPI service is running."
+        )
+        return
+    except requests.HTTPError as e:
+        st.error(backend_error(e.response))
+        return
+    except requests.RequestException as e:
+        st.error(f"Could not reach the backend: {e}")
+        return
     
     if not stations:
         st.warning("⚠️ Backend server is not responding. Please make sure the FastAPI server is running.")
@@ -76,7 +106,11 @@ def main():
                 }
                 
                 try:
-                    response = requests.post(f"{BACKEND_URL}/predict", json=payload)
+                    response = requests.post(
+                        f"{BACKEND_URL}/predict",
+                        json=payload,
+                        timeout=REQUEST_TIMEOUT,
+                    )
                     if response.status_code == 200:
                         data = response.json()
                         prediction = data['prediction']
@@ -102,9 +136,13 @@ def main():
                             else:
                                 st.success("📉 Note: Predicted usage is below or near average. Demand should be normal.")
                     else:
-                        st.error(f"Backend Error: {response.text}")
-                except Exception as e:
-                    st.error(f"Connection Error: {e}")
+                        st.error(backend_error(response))
+                except requests.Timeout:
+                    st.error("The prediction backend timed out. Please try again.")
+                except requests.ConnectionError:
+                    st.error("The prediction backend is unavailable.")
+                except requests.RequestException as e:
+                    st.error(f"Could not reach the prediction backend: {e}")
 
     # --- MILESTONE 2: AGENTIC WORKFLOW ---
     st.divider()
@@ -123,7 +161,11 @@ def main():
                 }
                 
                 try:
-                    response = requests.post(f"{BACKEND_URL}/plan", json=payload)
+                    response = requests.post(
+                        f"{BACKEND_URL}/plan",
+                        json=payload,
+                        timeout=60,
+                    )
                     if response.status_code == 200:
                         final_plan = response.json()
                         
@@ -142,9 +184,13 @@ def main():
                             
                             st.markdown(f"**Refs:** {final_plan.get('Refs', 'N/A')}")
                     else:
-                        st.error(f"Backend Error: {response.text}")
-                except Exception as e:
-                    st.error(f"Connection Error: {e}")
+                        st.error(backend_error(response))
+                except requests.Timeout:
+                    st.error("The planning backend timed out. Please try again.")
+                except requests.ConnectionError:
+                    st.error("The planning backend is unavailable.")
+                except requests.RequestException as e:
+                    st.error(f"Could not reach the planning backend: {e}")
 
 if __name__ == "__main__":
     main()

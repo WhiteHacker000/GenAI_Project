@@ -25,10 +25,8 @@ COPY . .
 # Make the start script executable
 RUN chmod +x start.sh
 
-# Expose the ports for the API (8000) and Streamlit (10000)
-# (Though only Streamlit will be publicly accessible via Render)
+# The container serves the FastAPI backend. The Streamlit frontend is deployed
+# separately and connects through BACKEND_URL.
 EXPOSE 8000
-EXPOSE 10000
 
-# Specify the command to run on startup
 CMD ["./start.sh"]

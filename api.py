@@ -1,7 +1,9 @@
 import os
+from pathlib import Path
 import joblib
 import pandas as pd
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
 from dotenv import load_dotenv
@@ -11,14 +13,30 @@ load_dotenv() # Load environment variables from .env
 
 app = FastAPI(title="EV Charging AI Backend")
 
+frontend_urls = os.getenv("FRONTEND_URL", "")
+allowed_origins = [
+    "http://localhost:8501",
+    "http://127.0.0.1:8501",
+    *[url.strip().rstrip("/") for url in frontend_urls.split(",") if url.strip()],
+]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=list(dict.fromkeys(allowed_origins)),
+    allow_credentials=False,
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type"],
+)
+
 # Load model artifacts once on startup
-if os.path.exists('model_artifacts.pkl'):
-    artifacts = joblib.load('model_artifacts.pkl')
+BASE_DIR = Path(__file__).resolve().parent
+ARTIFACT_PATH = BASE_DIR / "model_artifacts.pkl"
+if ARTIFACT_PATH.is_file():
+    artifacts = joblib.load(ARTIFACT_PATH)
     rf_model = artifacts['model']
     station_avg_map = artifacts['station_avg_map']
     feature_columns = artifacts['feature_columns']
 else:
-    raise RuntimeError("Model artifacts not found! Run training first.")
+    raise RuntimeError(f"Model artifacts not found at {ARTIFACT_PATH}. Run training first.")
 
 # API Key for LangGraph (loaded from .env)
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
@@ -77,13 +95,19 @@ async def predict_energy(req: PredictRequest):
             "station_avg": float(station_avg_map[req.station_name]),
             "is_high_load": bool(prediction > station_avg_map[req.station_name])
         }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/plan")
 async def generate_plan(req: PlanRequest):
     try:
-        # Note: We use the key provided by env or hardcoded here
+        if not GROQ_API_KEY:
+            raise HTTPException(
+                status_code=503,
+                detail="GROQ_API_KEY is not configured on the backend.",
+            )
         plan = run_agentic_workflow(
             station=req.station_name,
             time_context=req.time_context,
@@ -92,6 +116,8 @@ async def generate_plan(req: PlanRequest):
             groq_key=GROQ_API_KEY
         )
         return plan
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

@@ -1,5 +1,6 @@
 import json
 import os
+from pathlib import Path
 from typing import TypedDict
 from langgraph.graph import StateGraph, END
 from langchain_community.vectorstores import FAISS
@@ -7,6 +8,8 @@ from langchain_community.embeddings.fastembed import FastEmbedEmbeddings
 from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field
+
+BASE_DIR = Path(__file__).resolve().parent
 
 # Define State Structure
 class AgentState(TypedDict):
@@ -31,7 +34,11 @@ def retrieve_node(state: AgentState):
     try:
         # Lightweight FastEmbed embeddings
         embeddings = FastEmbedEmbeddings()
-        vectorstore = FAISS.load_local("faiss_index", embeddings, allow_dangerous_deserialization=True)
+        vectorstore = FAISS.load_local(
+            str(BASE_DIR / "faiss_index"),
+            embeddings,
+            allow_dangerous_deserialization=True,
+        )
         retriever = vectorstore.as_retriever(search_kwargs={"k": 2})
         
         # Query based on the load

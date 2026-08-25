@@ -1,12 +1,15 @@
 import os
+from pathlib import Path
 from langchain_community.document_loaders import TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.embeddings.fastembed import FastEmbedEmbeddings
 from langchain_community.vectorstores import FAISS
 
+BASE_DIR = Path(__file__).resolve().parent
+
 def build_vector_store():
     # Load the document
-    loader = TextLoader("infrastructure_guidelines.md")
+    loader = TextLoader(str(BASE_DIR / "infrastructure_guidelines.md"))
     docs = loader.load()
 
     # Split the document into chunks
@@ -20,7 +23,7 @@ def build_vector_store():
     vectorstore = FAISS.from_documents(documents=splits, embedding=embeddings)
 
     # Save it locally
-    vectorstore.save_local("faiss_index")
+    vectorstore.save_local(str(BASE_DIR / "faiss_index"))
     print("Vector database successfully built and saved to 'faiss_index' directory.")
 
 if __name__ == "__main__":

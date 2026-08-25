@@ -25,11 +25,33 @@ A machine learning project that predicts energy consumption (kWh) at EV charging
 ├── faiss_index/                    # Saved FAISS vector store
 ├── model_artifacts.pkl             # Trained Random Forest model
 ├── Dockerfile                      # Container config
-├── start.sh                        # Startup script (Docker/Render)
+├── start.sh                        # FastAPI startup script (Docker/Render)
+├── render.yaml                     # Render backend service definition
 ├── runtime.txt                     # Python version for Streamlit Cloud
 ├── requirements.txt                # Python dependencies
 └── README.md
 ```
+
+## Deployment Architecture
+
+The frontend and backend are independent services in production:
+
+```
+Streamlit frontend
+        |
+        | BACKEND_URL
+        v
+FastAPI backend
+        |
+        +--> ML model
+        +--> LangGraph
+        +--> Groq
+```
+
+Streamlit Cloud runs only `app.py`. Deploy the FastAPI backend separately and
+set the Streamlit Cloud `BACKEND_URL` secret to its public HTTPS URL. The
+Streamlit Cloud `/api/v2/subdomain/...` browser request is an internal
+Streamlit request and is unrelated to these application routes.
 
 ## Setup Instructions
 
@@ -54,33 +76,43 @@ source .venv/bin/activate   # macOS/Linux
 pip install -r requirements.txt
 ```
 
-### 4. Start the FastAPI backend
+### 4. Start the FastAPI backend locally
 
 ```bash
 source .venv/bin/activate
-python -m uvicorn api:app --host 127.0.0.1 --port 8000
+uvicorn api:app --reload --host 127.0.0.1 --port 8000
 ```
 
-Set `GROQ_API_KEY` in `.env` before starting the backend. The agent uses
-`llama-3.1-8b-instant` by default; set `GROQ_MODEL` to another model available
-to your Groq account when needed.
+### 5. Start the Streamlit frontend locally
 
-This starts the backend at `http://127.0.0.1:8000`.
-
-### 5. Run the Streamlit app
+In a second terminal:
 
 ```bash
+source .venv/bin/activate
 streamlit run app.py
 ```
-
-For Streamlit Cloud, deploy the FastAPI backend separately at a public URL and
-set `BACKEND_URL` in the Streamlit app's secrets or environment variables. Do
-not use the default `127.0.0.1:8000` there, because that address points to the
-Streamlit Cloud container and not to your backend service.
 
 Open in browser: **http://localhost:8501**
 
 > 🌐 Or use the hosted version: [https://genaiproject-yhnnwtxdp3dkjy4ifvdvpj.streamlit.app/](https://genaiproject-yhnnwtxdp3dkjy4ifvdvpj.streamlit.app/)
+
+### Environment variables
+
+Copy `.env.example` to `.env` for local development and provide your own
+values. Never commit `.env` or real API keys.
+
+- `GROQ_API_KEY`: required by the `/plan` endpoint.
+- `GROQ_MODEL`: optional Groq model name.
+- `BACKEND_URL`: frontend URL for the FastAPI service; defaults to local port 8000.
+- `FRONTEND_URL`: comma-separated allowed frontend origins for backend CORS.
+
+### Production backend deployment
+
+The included `render.yaml` defines a standalone Render web service. Its start
+command is `uvicorn api:app --host 0.0.0.0 --port $PORT`, and the service health
+check uses `GET /`. Set `GROQ_API_KEY` and `FRONTEND_URL` in Render, then set
+the resulting service URL as `BACKEND_URL` in Streamlit Cloud. Do not use
+`127.0.0.1:8000` as the production backend URL.
 
 ## System Architecture
 
