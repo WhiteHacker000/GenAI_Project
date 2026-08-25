@@ -1,4 +1,5 @@
 import json
+import os
 from typing import TypedDict
 from langgraph.graph import StateGraph, END
 from langchain_community.vectorstores import FAISS
@@ -53,7 +54,7 @@ def generation_node(state: AgentState):
             
         llm = ChatGroq(
             api_key=state['groq_api_key'],
-            model="llama-3.3-70b-versatile",
+            model=os.getenv("GROQ_MODEL", "llama-3.1-8b-instant"),
             temperature=0.2
         )
         

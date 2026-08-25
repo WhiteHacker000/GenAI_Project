@@ -57,8 +57,13 @@ pip install -r requirements.txt
 ### 4. Start the FastAPI backend
 
 ```bash
-python api.py
+source .venv/bin/activate
+python -m uvicorn api:app --host 127.0.0.1 --port 8000
 ```
+
+Set `GROQ_API_KEY` in `.env` before starting the backend. The agent uses
+`llama-3.1-8b-instant` by default; set `GROQ_MODEL` to another model available
+to your Groq account when needed.
 
 This starts the backend at `http://127.0.0.1:8000`.
 
@@ -67,6 +72,11 @@ This starts the backend at `http://127.0.0.1:8000`.
 ```bash
 streamlit run app.py
 ```
+
+For Streamlit Cloud, deploy the FastAPI backend separately at a public URL and
+set `BACKEND_URL` in the Streamlit app's secrets or environment variables. Do
+not use the default `127.0.0.1:8000` there, because that address points to the
+Streamlit Cloud container and not to your backend service.
 
 Open in browser: **http://localhost:8501**
 
